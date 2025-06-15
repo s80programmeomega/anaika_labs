@@ -1,2 +1,8 @@
 djangorestframework
+django-browser-reload
+django-cleanup
+drf-spectacular
+drf-spectacular[sidecar]
 pywatchman
+pydub-ng
+pyaudio
