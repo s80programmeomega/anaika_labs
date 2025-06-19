@@ -1,13 +1,46 @@
 from rest_framework import permissions
 from rest_framework.viewsets import ModelViewSet
-from .models import Evaluation
-from .serializers import EvaluationSerializer
+from .models import Evaluation, EvaluationResult, FlowResult, PronunciationResult
+from .serializers import FlowResultSerializer, PronunciationResultSerializer
+from .serializers import EvaluationSerializer, EvaluationResultSerializer
+from . import utils
+from rest_framework.response import Response
+from rest_framework import status
 
 
-class EvaluationCreateView(ModelViewSet):
+class EvaluationViewSet(ModelViewSet):
     queryset = Evaluation.objects.all()
     serializer_class = EvaluationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get", "post", "delete"]
 
-    # def perform_create(self, serializer):
-    #     # serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        # Save the Evaluation instance, setting user to the authenticated user
+        serializer.save(user=request.user)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class EvaluationResultViewSet(ModelViewSet):
+    serializer_class = EvaluationResultSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        return EvaluationResult.objects.filter(evaluation__user=self.request.user)
+
+
+class FlowResultViewSet(ModelViewSet):
+    queryset = FlowResult.objects.all()
+    serializer_class = FlowResultSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get"]
+
+
+class PronunciationResultViewSet(ModelViewSet):
+    queryset = PronunciationResult.objects.all()
+    serializer_class = PronunciationResultSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get"]

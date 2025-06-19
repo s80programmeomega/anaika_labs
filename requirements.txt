@@ -6,3 +6,10 @@ drf-spectacular[sidecar]
 pywatchman
 pydub-ng
 pyaudio
+openai-whisper
+python-Levenshtein
+librosa
+biopython
+numpy
+biopython
+phonemizer

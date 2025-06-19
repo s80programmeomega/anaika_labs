@@ -5,9 +5,9 @@ info:
 paths:
   /api/evaluations/:
     get:
-      operationId: evaluations_list
+      operationId: api_evaluations_list
       tags:
-      - evaluations
+      - api
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -20,96 +20,9 @@ paths:
                 items:
                   $ref: '#/components/schemas/Evaluation'
           description: ''
-    post:
-      operationId: evaluations_create
-      tags:
-      - evaluations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Evaluation'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Evaluation'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Evaluation'
-        required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Evaluation'
-          description: ''
-    put:
-      operationId: evaluations_update
-      tags:
-      - evaluations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Evaluation'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Evaluation'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Evaluation'
-        required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Evaluation'
-          description: ''
-    patch:
-      operationId: evaluations_partial_update
-      tags:
-      - evaluations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedEvaluation'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedEvaluation'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedEvaluation'
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Evaluation'
-          description: ''
-    delete:
-      operationId: evaluations_destroy
-      tags:
-      - evaluations
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '204':
-          description: No response body
   /api/schema/:
     get:
-      operationId: schema_retrieve
+      operationId: api_schema_retrieve
       description: |-
         OpenApi3 schema for this API. Format can be selected via content negotiation.
 
@@ -228,7 +141,7 @@ paths:
           - zh-hans
           - zh-hant
       tags:
-      - schema
+      - api
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -253,6 +166,242 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /evaluation/:
+    get:
+      operationId: evaluation_list
+      tags:
+      - evaluation
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evaluation'
+          description: ''
+    post:
+      operationId: evaluation_create
+      tags:
+      - evaluation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Evaluation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Evaluation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Evaluation'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+          description: ''
+  /evaluation-results/:
+    get:
+      operationId: evaluation_results_list
+      tags:
+      - evaluation-results
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EvaluationResult'
+          description: ''
+  /evaluation-results/{id}/:
+    get:
+      operationId: evaluation_results_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this evaluation result.
+        required: true
+      tags:
+      - evaluation-results
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationResult'
+          description: ''
+  /evaluation/{id}/:
+    get:
+      operationId: evaluation_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this evaluation.
+        required: true
+      tags:
+      - evaluation
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+          description: ''
+    delete:
+      operationId: evaluation_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this evaluation.
+        required: true
+      tags:
+      - evaluation
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /flow-results/:
+    get:
+      operationId: flow_results_list
+      tags:
+      - flow-results
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FlowResult'
+          description: ''
+  /flow-results/{id}/:
+    get:
+      operationId: flow_results_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - flow-results
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowResult'
+          description: ''
+  /pronunciation-results/:
+    get:
+      operationId: pronunciation_results_list
+      tags:
+      - pronunciation-results
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PronunciationResult'
+          description: ''
+  /pronunciation-results/{id}/:
+    get:
+      operationId: pronunciation_results_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this pronunciation result.
+        required: true
+      tags:
+      - pronunciation-results
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PronunciationResult'
+          description: ''
+  /users/:
+    get:
+      operationId: users_list
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+  /users/{id}/:
+    get:
+      operationId: users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        description: A unique value identifying this user.
+        required: true
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
 components:
   schemas:
     Evaluation:
@@ -261,6 +410,10 @@ components:
         id:
           type: string
           readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
         reference_text:
           type: string
           description: The reference text for the pronunciation evaluation.
@@ -282,42 +435,134 @@ components:
           type: string
           format: date-time
           readOnly: true
-        user:
-          type: integer
       required:
       - date_added
       - id
       - last_modified
       - user
-    PatchedEvaluation:
+    EvaluationResult:
       type: object
       properties:
         id:
           type: string
           readOnly: true
-        reference_text:
-          type: string
-          description: The reference text for the pronunciation evaluation.
-        reference_audio:
-          type: string
-          format: uri
-          nullable: true
-          description: Audio file of the reference text for pronunciation evaluation.
-        user_audio:
-          type: string
-          format: uri
-          nullable: true
-          description: Audio file of the user's pronunciation attempt.
+        evaluation:
+          allOf:
+          - $ref: '#/components/schemas/Evaluation'
+          readOnly: true
+        reference_flow_result:
+          allOf:
+          - $ref: '#/components/schemas/FlowResult'
+          readOnly: true
+          description: Reference flow result for the evaluation.
+        user_flow_result:
+          allOf:
+          - $ref: '#/components/schemas/FlowResult'
+          readOnly: true
+          description: User flow result for the evaluation.
+        pronunciation_result:
+          allOf:
+          - $ref: '#/components/schemas/PronunciationResult'
+          readOnly: true
+          description: Pronunciation result for the evaluation.
+        clarity_score:
+          type: number
+          format: double
+          description: The clarity score of the user's pronunciation.
         date_added:
           type: string
           format: date-time
           readOnly: true
-        last_modified:
+      required:
+      - clarity_score
+      - date_added
+      - evaluation
+      - id
+      - pronunciation_result
+      - reference_flow_result
+      - user_flow_result
+    FlowResult:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        speaking_ratio:
+          type: number
+          format: double
+          description: The ratio of speaking time to total time in the audio recording.
+        speaking_speed:
+          type: number
+          format: double
+          description: The speaking speed in words per minute.
+        flow_score:
+          type: number
+          format: double
+          description: The overall flow score based on speaking speed and continuity.
+        date_added:
           type: string
           format: date-time
           readOnly: true
-        user:
-          type: integer
+        evaluation:
+          type: string
+      required:
+      - date_added
+      - evaluation
+      - flow_score
+      - id
+      - speaking_ratio
+      - speaking_speed
+    PronunciationResult:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        score:
+          type: number
+          format: double
+          description: The pronunciation score based on phonetic analysis.
+        percentage:
+          type: number
+          format: double
+          description: The percentage of correct pronunciation compared to the reference.
+        user_phonemes:
+          type: string
+          description: The phonemes detected in the user's pronunciation.
+        reference_phonemes:
+          type: string
+          description: The phonemes present in the reference pronunciation.
+        date_added:
+          type: string
+          format: date-time
+          readOnly: true
+        evaluation:
+          type: string
+      required:
+      - date_added
+      - evaluation
+      - id
+      - percentage
+      - reference_phonemes
+      - score
+      - user_phonemes
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        username:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - id
+      - username
   securitySchemes:
     basicAuth:
       type: http

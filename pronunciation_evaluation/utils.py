@@ -1,10 +1,15 @@
 import os
 import wave
 
+import librosa
+import numpy as np
 import pyaudio
+import whisper
+from Bio.Align import PairwiseAligner
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.utils import timezone
+from Levenshtein import ratio as levenshtein_ratio
+from phonemizer import phonemize
 from pydub import AudioSegment
 
 
@@ -105,3 +110,189 @@ def convert_audio(input_path, output_format="mp3", bitrate=None, mpeg_layer=None
     # Export the file
     audio.export(output_path, **params)
     return output_path
+
+
+# ========================
+# Speech Processing Module
+# ========================
+
+
+def transcribe_audio(file_path: str) -> str:
+    """
+    Converts speech to text using OpenAI's Whisper
+
+    Args:
+    file_path (str): Path to audio file
+
+    Returns:
+    str: Transcribed text (lowercase, no punctuation)
+
+    Reference: Radford et al. (2022) Robust Speech Recognition
+    via Large-Scale Weak Supervision
+    """
+    model = whisper.load_model("small")
+    result = model.transcribe(file_path)
+    print(f"===> Detected Language: {result['language']} <====")
+    return str(result["text"]).strip()
+
+
+# ========================
+# Evaluation Metrics
+# ========================
+
+
+def evaluate_clarity(reference: str, transcription: str) -> float:
+    """
+    Calculates clarity score using Levenshtein ratio
+
+    Args:
+    reference (str): Expected text
+    transcription (str): User's spoken text
+
+    Returns:
+    float: Similarity score between 0-1
+
+    Reference: Levenshtein, V. (1966) Binary codes capable of
+    correcting deletions, insertions, and reversals
+    """
+    return levenshtein_ratio(s1=reference.lower(), s2=transcription.lower())
+
+
+def evaluate_flow(audio_path: str) -> tuple:
+    """
+    Analyzes speech fluency through:
+    1. Speaking rate (words per minute)
+    2. Pause frequency
+    3. Speech continuity
+
+    Args:
+    audio_path (str): Path to audio file
+
+    Returns:
+    float: Fluency score between 0-1
+    """
+    y, sr = librosa.load(path=audio_path, sr=16000)
+
+    # Voice activity detection
+    intervals = librosa.effects.split(y=y, top_db=25)
+
+    # Calculate speech duration
+    speech_samples = sum(end - start for start, end in intervals)
+    total_duration = len(y) / sr
+    speaking_ratio = speech_samples / len(y)
+    speaking_ratio = round(number=speaking_ratio*100, ndigits=2)
+
+    # Words per minute calculation
+    transcription = transcribe_audio(audio_path)
+    words = len(transcription.split())
+    speed = words / (total_duration / 60)
+    speed = int(round(number=speed, ndigits=0))
+
+    # Ideal rate: 120 WPM (adjust for French)
+    rate_score = np.exp(-0.5 * ((speed - 100) / 40) ** 2)
+    continuity_score = 1 - (len(intervals) / 20)  # Fewer pauses better
+
+    flow_score = 0.6 * rate_score + 0.4 * continuity_score
+    flow_score = round(number=flow_score*100, ndigits=2)
+
+    return speaking_ratio, speed, flow_score
+
+
+def evaluate_pronunciation(user_audio_path: str, target_audio_path: str, base_text: str):
+    """
+    Evaluates the pronunciation of a user's audio against a target audio and reference text.
+
+    This function performs the following steps:
+    1. Transcribes both the user's and target's audio files to text.
+    2. Phonemizes the base text and the user's transcribed text.
+    3. Aligns the phonemes to compute a pronunciation similarity score.
+    4. Evaluates the clarity of the user's transcription compared to the reference text.
+    5. Evaluates the flow (speaking ratio, speed, and flow score) of the user's audio.
+
+    Args:
+        user_audio_path (str): Path to the user's audio file.
+        target_audio_path (str): Path to the target/reference audio file.
+        base_text (str): The reference text to compare against.
+
+    Returns:
+        dict: A dictionary containing the following keys:
+            - "clarity": Clarity score as a percentage.
+            - "speaking_ratio": Ratio of speaking time to total audio duration.
+            - "speed": Speaking speed (e.g., words per minute).
+            - "flow": Flow score as a percentage.
+            - "pronunciation": Dictionary with:
+                - "score": Raw pronunciation alignment score.
+                - "percentage": Normalized pronunciation score as a percentage.
+                - "user phonemes": Phonemized user transcription.
+                - "reference phonemes": Phonemized base text.
+    """
+
+    result = {}
+
+    user_text = transcribe_audio(user_audio_path)
+    target_text = transcribe_audio(target_audio_path)
+
+    print(f"{user_text=}")
+    print(f"{target_text=}")
+
+    base_phonemes = phonemize(text=base_text, language="fr-fr")
+
+    audio1_phonemes = phonemize(
+        text=user_text,
+        language="fr-fr",
+    )
+
+    aligner = PairwiseAligner()
+    user_alignments = aligner.align(audio1_phonemes, base_phonemes)
+
+    user_alignment = user_alignments[0]
+
+    print(f"{user_alignments=}")
+
+    user_count = user_alignment.counts()
+    user_score = user_count.identities
+
+    user_max_len = max(len(audio1_phonemes), len(base_phonemes))
+
+    user_normalized_score = user_score / user_max_len if user_max_len > 0 else 0
+    percentage = user_normalized_score * 100
+    percentage = round(number=percentage, ndigits=2)
+
+    print("///////////////////////////////")
+    print("Pronunciations Evaluation:")
+    print(f"User pronunciation score: {user_score}, Percentage: {percentage}%")
+    print("///////////////////////////////")
+
+    clarity_score = evaluate_clarity(
+        reference=base_text, transcription=user_text)
+    clarity_score = round(number=clarity_score*100, ndigits=2)
+
+    print("///////////////////////////////")
+    print("Clarity Evaluation:")
+    print(
+        f"User clarity score: {clarity_score}%"
+    )
+
+    print("///////////////////////////////")
+
+    flow = evaluate_flow(audio_path=user_audio_path)
+
+    print("///////////////////////////////")
+    print("Flow Evaluation:")
+    print(f"User flow score: {flow[2]}%")
+    print("///////////////////////////////")
+
+    result["clarity"] = clarity_score
+    result["flow"] = {
+        "speaking_ratio": flow[0],
+        "speaking_speed": flow[1],
+        "score": flow[2],
+
+    }
+    result["pronunciation"] = {
+        "score": user_score,
+        "percentage": percentage,
+        "user_phonemes": audio1_phonemes,
+        "reference_phonemes": base_phonemes,
+    }
+    return result

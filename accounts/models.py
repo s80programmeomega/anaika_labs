@@ -5,6 +5,8 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+from pronunciation_evaluation.utils import generate_id
+
 
 class UserType(models.TextChoices):
     GUEST = "guest", "Guest"
@@ -16,6 +18,7 @@ class CustomUserManager(BaseUserManager):
     """Define a model manager for CustomUser model with no username field."""
 
     def create_user(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("user_type", UserType.REGULAR)
         if not email:
             raise ValueError("The Email field must be set")
         email = self.normalize_email(email)
@@ -43,12 +46,14 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """Custom user model with email as the unique identifier."""
 
+    id = models.CharField(primary_key=True, default=generate_id, editable=False)
+
     user_type = models.CharField(
         max_length=20, choices=UserType.choices, default=UserType.REGULAR
     )
 
     email = models.EmailField(unique=True)
-    username = models.CharField(max_length=150, blank=False)
+    username = models.CharField(max_length=150, blank=False, unique=True)
     first_name = models.CharField(max_length=30, blank=True, null=True)
     last_name = models.CharField(max_length=30, blank=True, null=True)
     is_active = models.BooleanField(default=True)

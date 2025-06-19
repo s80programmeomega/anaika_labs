@@ -1,19 +1,11 @@
 from django.urls import path
-from .views import EvaluationCreateView
+from .views import EvaluationViewSet
 
 urlpatterns = [
     path(
         "evaluations/",
-        EvaluationCreateView.as_view(
-            {
-                "post": "create",
-                "get": "list",
-                "put": "update",
-                "delete": "destroy",
-                "patch": "partial_update",
-                "options": "options",
-            }
-        ),
-        name="evaluation-create",
+        EvaluationViewSet.as_view(
+            {'get': 'list'}),
+        name="evaluation",
     ),
 ]
