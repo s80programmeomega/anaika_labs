@@ -13,3 +13,6 @@ biopython
 numpy
 biopython
 phonemizer
+djangorestframework-simplejwt
+djangorestframework-simplejwt[crypto]
+djoser

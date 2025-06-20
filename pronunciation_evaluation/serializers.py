@@ -1,10 +1,10 @@
 from .models import Evaluation, EvaluationResult, FlowResult, PronunciationResult
 from rest_framework import serializers
-from accounts.serializers import UserSerializer
+from accounts.serializers import CustumUserSerializer
 
 
 class EvaluationSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = CustumUserSerializer(read_only=True)
     result = "EvaluationResultSerializer"
 
     class Meta:
