@@ -54,10 +54,11 @@ def create_result_for_evaluation(sender, instance: Evaluation, created, **kwargs
         )
         # /////////////////////////////////////////////////////////
 
-        EvaluationResult.objects.create(
-            evaluation=instance,
+        evaluation_result = EvaluationResult.objects.create(
             clarity_score=user_clarity_result,
             reference_flow_result=target_flow_results,
             user_flow_result=user_flow_results,
             pronunciation_result=user_pronunciation_results,
         )
+        instance.result = evaluation_result # type: ignore
+        instance.save(update_fields=["result"])

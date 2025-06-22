@@ -20,7 +20,7 @@ class EvaluationViewSet(ModelViewSet):
         # Save the Evaluation instance, setting user to the authenticated user
         serializer.save(user=request.user)
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 class EvaluationResultViewSet(ModelViewSet):
@@ -29,6 +29,10 @@ class EvaluationResultViewSet(ModelViewSet):
     http_method_names = ["get"]
 
     def get_queryset(self):
+        if self.request.user.is_superuser:
+            # If the user is a superuser, return all evaluation results
+            return EvaluationResult.objects.all()
+        # Otherwise, filter results by the authenticated user
         return EvaluationResult.objects.filter(evaluation__user=self.request.user)
 
 

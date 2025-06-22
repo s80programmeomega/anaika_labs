@@ -16,3 +16,4 @@ phonemizer
 djangorestframework-simplejwt
 djangorestframework-simplejwt[crypto]
 djoser
+python-magic

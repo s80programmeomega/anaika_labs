@@ -1,7 +1,12 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core import validators
+from .validators import allowed_audio_extensions, validate_file_content_type
+from pronunciation_evaluation.utils import generate_id, convert_audio
 
-from pronunciation_evaluation.utils import generate_id
+
+def get_upload_path(instance, filename) -> str:
+    return f"evaluations/{filename}"
 
 
 class Evaluation(models.Model):
@@ -15,21 +20,39 @@ class Evaluation(models.Model):
         default="",
     )
 
-    def get_user_email(instance, filename) -> str:  # type: ignore
-        return f"evaluations/{filename}"
-
     reference_audio = models.FileField(
-        upload_to=get_user_email,
+        upload_to=get_upload_path,
         help_text="Audio file of the reference text for pronunciation evaluation.",
         blank=True,
         null=True,
+        validators=[
+            validators.FileExtensionValidator(
+                allowed_extensions=allowed_audio_extensions,
+                message="Only mp3, wav, aac, flac or mpeg file types are allowed.",
+            ),
+            validate_file_content_type,
+        ],
     )
 
     user_audio = models.FileField(
-        upload_to=get_user_email,
+        upload_to=get_upload_path,
         help_text="Audio file of the user's pronunciation attempt.",
         blank=True,
         null=True,
+        validators=[
+            validators.FileExtensionValidator(
+                allowed_extensions=allowed_audio_extensions,
+                message="Only mp3, wav, aac, flac or mpeg file types are allowed.",
+            ),
+            validate_file_content_type,
+        ],
+    )
+    result = models.OneToOneField(
+        "EvaluationResult",
+        on_delete=models.CASCADE,
+        related_name="evaluation",
+        null=True,
+        blank=True,
     )
 
     date_added = models.DateTimeField(auto_now_add=True)
@@ -97,9 +120,9 @@ class PronunciationResult(models.Model):
 
 class EvaluationResult(models.Model):
     id = models.CharField(primary_key=True, default=generate_id, editable=False)
-    evaluation = models.OneToOneField(
-        Evaluation, on_delete=models.CASCADE, related_name="result"
-    )
+    # evaluation = models.OneToOneField(
+    #     Evaluation, on_delete=models.CASCADE,
+    # )
     clarity_score = models.FloatField(
         help_text="The clarity score of the user's pronunciation."
     )
@@ -127,15 +150,15 @@ class EvaluationResult(models.Model):
 
     date_added = models.DateTimeField(auto_now_add=True)
 
-    def __repr__(self) -> str:
-        return (
-            f"Result for Evaluation {self.evaluation.id},\n"
-            f"User: {self.evaluation.user.email},\n"
-            f"Clarity Score: {self.clarity_score},\n"
-            f"Reference Flow Result: {self.reference_flow_result},\n"
-            f"User Flow Result: {self.user_flow_result},\n"
-            f"Pronunciation Result: {self.pronunciation_result}\n"
-        )
+    # def __repr__(self) -> str:
+    #     return (
+    #         f"Result for Evaluation {self.evaluation.id},\n"
+    #         f"User: {self.evaluation.user.email},\n"
+    #         f"Clarity Score: {self.clarity_score},\n"
+    #         f"Reference Flow Result: {self.reference_flow_result},\n"
+    #         f"User Flow Result: {self.user_flow_result},\n"
+    #         f"Pronunciation Result: {self.pronunciation_result}\n"
+    #     )
 
     def __str__(self) -> str:
         return self.id

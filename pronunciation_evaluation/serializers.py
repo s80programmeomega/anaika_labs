@@ -3,20 +3,6 @@ from rest_framework import serializers
 from accounts.serializers import CustumUserSerializer
 
 
-class EvaluationSerializer(serializers.ModelSerializer):
-    user = CustumUserSerializer(read_only=True)
-    result = "EvaluationResultSerializer"
-
-    class Meta:
-        model = Evaluation
-        fields = "__all__"
-        read_only_fields: list[str] = ["user"]
-
-    def create(self, validated_data) -> Evaluation:
-        evaluation: Evaluation = Evaluation.objects.create(**validated_data)
-        return evaluation
-
-
 class FlowResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = FlowResult
@@ -40,7 +26,7 @@ class PronunciationResultSerializer(serializers.ModelSerializer):
 
 
 class EvaluationResultSerializer(serializers.ModelSerializer):
-    evaluation = EvaluationSerializer(read_only=True)
+    evaluation = "EvaluationSerializer"
     reference_flow_result = FlowResultSerializer(
         read_only=True, help_text="Reference flow result for the evaluation."
     )
@@ -66,3 +52,28 @@ class EvaluationResultSerializer(serializers.ModelSerializer):
             **validated_data
         )
         return user_result
+
+
+class EvaluationSerializer(serializers.ModelSerializer):
+    user = CustumUserSerializer(read_only=True)
+    result = EvaluationResultSerializer(
+        read_only=True, help_text="Result of the evaluation."
+    )
+
+    class Meta:
+        model = Evaluation
+        fields = [
+            "id",
+            "reference_text",
+            "reference_audio",
+            "user_audio",
+            "result",
+            "user",
+            "date_added",
+            "last_modified",
+        ]
+        read_only_fields: list[str] = ["user"]
+
+    def create(self, validated_data) -> Evaluation:
+        evaluation: Evaluation = Evaluation.objects.create(**validated_data)
+        return evaluation

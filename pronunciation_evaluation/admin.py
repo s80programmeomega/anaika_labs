@@ -15,7 +15,7 @@ class EvaluationAdmin(admin.ModelAdmin):
     @admin.display(description="Result")
     def result_link(self, obj):
         if hasattr(obj, "result") and obj.result:
-            url = f"/admin/pronunciation_evaluation/userresult/{obj.result.id}/change/"
+            url = f"/admin/pronunciation_evaluation/evaluationresult/{obj.result.id}/change/"
             return format_html(format_string=f'<a href="{url}">View Result</a>')
         return "-"
 
@@ -51,7 +51,7 @@ class PronunciationResultAdmin(admin.ModelAdmin):
 
 
 @admin.register(EvaluationResult)
-class UserResultAdmin(admin.ModelAdmin):
+class EvaluationResultAdmin(admin.ModelAdmin):
     list_display = ("id", "evaluation", "clarity_score", "date_added")
     search_fields = (
         "evaluation__user__username",

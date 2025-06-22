@@ -130,8 +130,8 @@ def transcribe_audio(file_path: str) -> str:
     Reference: Radford et al. (2022) Robust Speech Recognition
     via Large-Scale Weak Supervision
     """
-    model = whisper.load_model("small")
-    result = model.transcribe(file_path)
+    model = whisper.load_model(name="small")
+    result = model.transcribe(audio=file_path, verbose=True, language="fr")
     print(f"===> Detected Language: {result['language']} <====")
     return str(result["text"]).strip()
 
@@ -200,32 +200,31 @@ def evaluate_flow(audio_path: str) -> tuple:
 
 def evaluate_pronunciation(user_audio_path: str, target_audio_path: str, base_text: str):
     """
-    Evaluates the pronunciation of a user's audio against a target audio and reference text.
+    Evaluates a user's pronunciation by comparing their spoken audio to a target reference audio and base text.
 
     This function performs the following steps:
-    1. Transcribes both the user's and target's audio files to text.
-    2. Phonemizes the base text and the user's transcribed text.
-    3. Aligns the phonemes to compute a pronunciation similarity score.
-    4. Evaluates the clarity of the user's transcription compared to the reference text.
-    5. Evaluates the flow (speaking ratio, speed, and flow score) of the user's audio.
+    1. Transcribes both the user's audio and the target audio to text.
+    2. Converts the base text and the user's transcription to phonemes.
+    3. Aligns the user's phonemes with the reference phonemes and computes a pronunciation score.
+    4. Evaluates the clarity of the user's transcription compared to the base text.
+    5. Assesses the flow of the user's speech (e.g., speaking ratio, speed, and flow score).
 
     Args:
         user_audio_path (str): Path to the user's audio file.
         target_audio_path (str): Path to the target/reference audio file.
-        base_text (str): The reference text to compare against.
+        base_text (str): The reference text that the user is expected to pronounce.
 
     Returns:
-        dict: A dictionary containing the following keys:
+        dict: A dictionary containing:
             - "clarity": Clarity score as a percentage.
-            - "speaking_ratio": Ratio of speaking time to total audio duration.
-            - "speed": Speaking speed (e.g., words per minute).
-            - "flow": Flow score as a percentage.
-            - "pronunciation": Dictionary with:
-                - "score": Raw pronunciation alignment score.
-                - "percentage": Normalized pronunciation score as a percentage.
-                - "user phonemes": Phonemized user transcription.
-                - "reference phonemes": Phonemized base text.
+            - "flow": Dictionary with "speaking_ratio", "speaking_speed", and "score" (percentage).
+            - "pronunciation": Dictionary with "score" (identity count), "percentage" (normalized score), 
+              "user_phonemes", and "reference_phonemes".
+
+    Raises:
+        Any exceptions raised by the underlying transcription, phonemization, or evaluation functions.
     """
+
 
     result = {}
 
